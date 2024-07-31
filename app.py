@@ -25,7 +25,7 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 # Define User Model
-class User(db.Model):
+class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -59,12 +59,12 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-
-    user = User.query.filter_by(email=email).first()
-    if user and bcrypt.check_password_hash(user.password, password):
+    # data = request.get_json()
+    email = request.form.get('email')
+    password = request.form.get('password')
+    print(email,password)
+    user = users.query.filter_by(email=email).first()
+    if user and user.password == password:
         return jsonify({'message': 'Login successful!'}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
