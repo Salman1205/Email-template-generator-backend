@@ -2,31 +2,19 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-import nltk
 import os
 import google.generativeai as genai
 from rake_nltk import Rake
 import random
 import requests
 
-nltk.data.path.append(os.path.join(os.path.dirname(__file__), 'nltk_data'))
-
-# gemini api key to env
-os.environ["GENERATIVE_AI_API_KEY"] = "AIzaSyBBTYcBb6ZtsFPZEvNTQ7gVqTv7w5MyF_8"
-genai.configure(api_key=os.environ["GENERATIVE_AI_API_KEY"])
-
-# unsplash related
-UNSPLASH_ACCESS_KEY = "hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6qk"
-UNSPLASH_API_URL = "https://api.unsplash.com/search/photos"
-
 app = Flask(__name__)
 CORS(app)
 
 # SQLAlchemy configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('mysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'your_secret_key'  # Change this to a real secret key
-
+app.secret_key = os.environ.get('SECRET_KEY', 'dad3897609b9b020e8db6d51a1d2d37f41e76b93db033b9c')  # Use environment variable
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -68,9 +56,6 @@ def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-
-    if not email or not password:
-        return jsonify({'error': 'Missing fields'}), 400
 
     user = User.query.filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
