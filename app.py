@@ -11,10 +11,14 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# SQLAlchemy configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('mysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db')
+# Configuration for SQLAlchemy and other settings
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URI',
+    'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.environ.get('SECRET_KEY', 'dad3897609b9b020e8db6d51a1d2d37f41e76b93db033b9c')  # Use environment variable
+app.secret_key = os.environ.get('SECRET_KEY', '123456789123456789123456')  # Use environment variable or default key
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -107,6 +111,10 @@ def query():
         rake.extract_keywords_from_text(query_text)
         keywords = rake.get_ranked_phrases()
 
+        # Unsplash API configuration
+        UNSPLASH_ACCESS_KEY = "your_unsplash_access_key"
+        UNSPLASH_API_URL = "https://api.unsplash.com/search/photos"
+
         # Use the first keyword for the Unsplash API
         if keywords:
             keyword = keywords[0]
@@ -137,4 +145,4 @@ def query():
         return jsonify({'error': 'Failed to process Gemini response.'}), 500
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)  # Set debug=True for development
