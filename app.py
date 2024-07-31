@@ -41,16 +41,16 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
+    # data = request.get_json()
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
 
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, email=email, password=hashed_password)
+    # Directly use the password without hashing
+    new_user = users(username=username, email=email, password=password)
 
     db.session.add(new_user)
     db.session.commit()
