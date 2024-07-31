@@ -15,7 +15,7 @@ nltk.data.path.append(os.path.join(os.path.dirname(__file__), 'nltk_data'))
 os.environ["GENERATIVE_AI_API_KEY"] = "AIzaSyBBTYcBb6ZtsFPZEvNTQ7gVqTv7w5MyF_8"
 genai.configure(api_key=os.environ["GENERATIVE_AI_API_KEY"])
 
-# unsplash relted
+# unsplash related
 UNSPLASH_ACCESS_KEY = "hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6qk"
 UNSPLASH_API_URL = "https://api.unsplash.com/search/photos"
 
@@ -69,8 +69,11 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    # Logic for checking credentials
-    if email == 'test@example.com' and password == 'password':  # Dummy check
+    if not email or not password:
+        return jsonify({'error': 'Missing fields'}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if user and bcrypt.check_password_hash(user.password, password):
         return jsonify({'message': 'Login successful!'}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
