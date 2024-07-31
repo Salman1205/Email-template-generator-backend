@@ -9,16 +9,18 @@ import random
 import requests
 
 app = Flask(__name__)
-CORS(app)
 
-# Configuration for SQLAlchemy and other settings
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URI',
-    'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
-)
+# Configure CORS
+CORS(app, resources={r"/*": {"origins": "*"}})  # Adjust origins as needed
+
+# SQLAlchemy configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.environ.get('SECRET_KEY', '123456789123456789123456')  # Use environment variable or default key
 
+# Secret Key for sessions and other purposes
+app.secret_key = os.environ.get('SECRET_KEY', '12345678')
+
+# Initialize SQLAlchemy and Bcrypt
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -35,7 +37,7 @@ with app.app_context():
 
 @app.route("/")
 def index():
-    return jsonify({"message": "hello from vercel"})
+    return jsonify({"message": "Hello from Vercel!"})
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -111,11 +113,9 @@ def query():
         rake.extract_keywords_from_text(query_text)
         keywords = rake.get_ranked_phrases()
 
-        # Unsplash API configuration
-        UNSPLASH_ACCESS_KEY = "your_unsplash_access_key"
-        UNSPLASH_API_URL = "https://api.unsplash.com/search/photos"
-
         # Use the first keyword for the Unsplash API
+        UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos'
+        UNSPLASH_ACCESS_KEY = "hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6qk"
         if keywords:
             keyword = keywords[0]
             unsplash_response = requests.get(UNSPLASH_API_URL, params={
@@ -145,4 +145,4 @@ def query():
         return jsonify({'error': 'Failed to process Gemini response.'}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)  # Set debug=True for development
+    app.run(host='0.0.0.0', port=80)  # Ensure it listens on all IP addresses
