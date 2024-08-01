@@ -118,9 +118,9 @@ def query():
         # Use the first keyword for the Unsplash API
         if keywords:
             keyword = keywords[0]
-            unsplash_response = requests.get(UNSPLASH_API_URL, params={
+            unsplash_response = requests.get('https://api.unsplash.com/search/photos', params={
                 'query': keyword,
-                'client_id': UNSPLASH_ACCESS_KEY
+                'client_id': 'hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6q'
             })
             unsplash_data = unsplash_response.json()
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
