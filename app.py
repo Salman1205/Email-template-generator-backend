@@ -8,9 +8,7 @@ import random
 import requests
 
 app = Flask(__name__)
-
-# Configure CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
@@ -68,7 +66,8 @@ def login():
 def query():
     try:
         data = request.get_json()
-        if not data or 'query' not in data:
+        print(data)
+        if 'query' not in data:
             return jsonify({'error': 'No query in JSON data'}), 400
 
         query_text = data['query']
@@ -93,15 +92,15 @@ def query():
         response_text = response.text
 
         # Extract Subject, Promo, and Description from the response
-        subject_start = response_text.find('"subject"') + len('"subject":')
+        subject_start = response_text.find('"subject"') + len('"subject"')
         subject_end = response_text.find('"promo"')
-        promo_start = response_text.find('"promo"') + len('"promo":')
+        promo_start = response_text.find('"promo"') + len('"promo"')
         promo_end = response_text.find('"description"')
-        description_start = response_text.find('"description"') + len('"description":')
+        description_start = response_text.find('"description"') + len('"description"')
 
-        subject = response_text[subject_start:subject_end].strip().strip(',').strip()
-        promo = response_text[promo_start:promo_end].strip().strip(',').strip()
-        description = response_text[description_start:].strip().strip(',').strip()
+        subject = response_text[subject_start:subject_end].strip().strip(':').strip().strip(',').strip()
+        promo = response_text[promo_start:promo_end].strip().strip(':').strip().strip(',').strip()
+        description = response_text[description_start:].strip().strip(':').strip().strip(',').strip()
 
         # Extract keywords from the query using RAKE
         rake = Rake()
@@ -111,11 +110,10 @@ def query():
         # Use the first keyword for the Unsplash API
         if keywords:
             keyword = keywords[0]
-            unsplash_response = requests.get('https://api.unsplash.com/search/photos', params={
+            unsplash_response = requests.get(UNSPLASH_API_URL, params={
                 'query': keyword,
-                'client_id': 'hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6q'
+                'client_id': UNSPLASH_ACCESS_KEY
             })
-            unsplash_response.raise_for_status()  # Raises an HTTPError if the HTTP request returned an unsuccessful status code
             unsplash_data = unsplash_response.json()
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
                 image_results = unsplash_data['results']
@@ -135,8 +133,8 @@ def query():
         }), 200
 
     except Exception as e:
-        print(f"Error processing request: {e}")
-        return jsonify({'error': 'Failed to process request.'}), 500
+        print(f"Error processing Gemini's response: {e}")
+        return jsonify({'error': 'Failed to process Gemini response.'}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)  # Added debug=True for easier development
+    app.run()
