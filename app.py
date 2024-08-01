@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 import os
 import google.generativeai as genai
 from rake_nltk import Rake
@@ -8,7 +9,9 @@ import random
 import requests
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
@@ -17,11 +20,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Secret Key for sessions and other purposes
 app.secret_key = os.environ.get('SECRET_KEY', '12345678')
 
-# Initialize SQLAlchemy
+# Initialize SQLAlchemy and Bcrypt
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
 
 # Define User Model
-class User(db.Model):  # Changed class name to User for consistency
+class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -37,6 +41,7 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
+    # data = request.get_json()
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -44,8 +49,8 @@ def register():
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    # Directly use the password without hashing (for testing purposes)
-    new_user = User(username=username, email=email, password=password)
+    # Directly use the password without hashing
+    new_user = users(username=username, email=email, password=password)
 
     db.session.add(new_user)
     db.session.commit()
@@ -54,13 +59,16 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
+    # data = request.get_json()
     email = request.form.get('email')
     password = request.form.get('password')
-    user = User.query.filter_by(email=email).first()
+    print(email,password)
+    user = users.query.filter_by(email=email).first()
     if user and user.password == password:
         return jsonify({'message': 'Login successful!'}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
+
 
 @app.route('/query', methods=['POST'])
 def query():
@@ -110,9 +118,9 @@ def query():
         # Use the first keyword for the Unsplash API
         if keywords:
             keyword = keywords[0]
-            unsplash_response = requests.get(UNSPLASH_API_URL, params={
+            unsplash_response = requests.get('https://api.unsplash.com/search/photos', params={
                 'query': keyword,
-                'client_id': UNSPLASH_ACCESS_KEY
+                'client_id': 'hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6q'
             })
             unsplash_data = unsplash_response.json()
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
