@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
 import os
 import google.generativeai as genai
 from rake_nltk import Rake
@@ -20,12 +19,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Secret Key for sessions and other purposes
 app.secret_key = os.environ.get('SECRET_KEY', '12345678')
 
-# Initialize SQLAlchemy and Bcrypt
+# Initialize SQLAlchemy
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 
 # Define User Model
-class users(db.Model):
+class User(db.Model):  # Changed class name to User for consistency
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -48,8 +46,8 @@ def register():
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    # Directly use the password without hashing
-    new_user = users(username=username, email=email, password=password)
+    # Directly use the password without hashing (for testing purposes)
+    new_user = User(username=username, email=email, password=password)
 
     db.session.add(new_user)
     db.session.commit()
@@ -60,7 +58,7 @@ def register():
 def login():
     email = request.form.get('email')
     password = request.form.get('password')
-    user = users.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email).first()
     if user and user.password == password:
         return jsonify({'message': 'Login successful!'}), 200
     else:
@@ -95,15 +93,15 @@ def query():
         response_text = response.text
 
         # Extract Subject, Promo, and Description from the response
-        subject_start = response_text.find('"subject"') + len('"subject"')
+        subject_start = response_text.find('"subject"') + len('"subject":')
         subject_end = response_text.find('"promo"')
-        promo_start = response_text.find('"promo"') + len('"promo"')
+        promo_start = response_text.find('"promo"') + len('"promo":')
         promo_end = response_text.find('"description"')
-        description_start = response_text.find('"description"') + len('"description"')
+        description_start = response_text.find('"description"') + len('"description":')
 
-        subject = response_text[subject_start:subject_end].strip().strip(':').strip().strip(',').strip()
-        promo = response_text[promo_start:promo_end].strip().strip(':').strip().strip(',').strip()
-        description = response_text[description_start:].strip().strip(':').strip().strip(',').strip()
+        subject = response_text[subject_start:subject_end].strip().strip(',').strip()
+        promo = response_text[promo_start:promo_end].strip().strip(',').strip()
+        description = response_text[description_start:].strip().strip(',').strip()
 
         # Extract keywords from the query using RAKE
         rake = Rake()
@@ -141,4 +139,4 @@ def query():
         return jsonify({'error': 'Failed to process request.'}), 500
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)  # Added debug=True for easier development
