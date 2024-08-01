@@ -41,7 +41,6 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
-    # data = request.get_json()
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -59,23 +58,20 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    # data = request.get_json()
     email = request.form.get('email')
     password = request.form.get('password')
-    print(email,password)
+
     user = users.query.filter_by(email=email).first()
     if user and user.password == password:
         return jsonify({'message': 'Login successful!'}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
-
 @app.route('/query', methods=['POST'])
 def query():
     try:
         data = request.get_json()
-        print(data)
-        if 'query' not in data:
+        if not data or 'query' not in data:
             return jsonify({'error': 'No query in JSON data'}), 400
 
         query_text = data['query']
@@ -120,8 +116,9 @@ def query():
             keyword = keywords[0]
             unsplash_response = requests.get('https://api.unsplash.com/search/photos', params={
                 'query': keyword,
-                'client_id': 'hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6q'
+                'client_id': 'your_unsplash_api_key'
             })
+            unsplash_response.raise_for_status()  # Raises an HTTPError if the HTTP request returned an unsuccessful status code
             unsplash_data = unsplash_response.json()
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
                 image_results = unsplash_data['results']
@@ -141,8 +138,8 @@ def query():
         }), 200
 
     except Exception as e:
-        print(f"Error processing Gemini's response: {e}")
-        return jsonify({'error': 'Failed to process Gemini response.'}), 500
+        print(f"Error processing request: {e}")
+        return jsonify({'error': 'Failed to process request.'}), 500
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)  # Enable debug mode to get more detailed error messages
