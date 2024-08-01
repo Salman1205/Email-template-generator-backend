@@ -11,7 +11,7 @@ import requests
 app = Flask(__name__)
 
 # Configure CORS
-CORS(app, resources={r"/*": {"origins": "*"}})  # Adjust origins as needed
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
