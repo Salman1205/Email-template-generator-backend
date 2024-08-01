@@ -69,15 +69,6 @@ def login():
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import genai
-import requests
-import random
-from rake_nltk import Rake
-
-app = Flask(__name__)
-CORS(app)
 
 @app.route('/query', methods=['POST'])
 def query():
