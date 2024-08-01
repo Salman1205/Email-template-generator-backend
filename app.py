@@ -85,7 +85,10 @@ def query():
         # Get form data from request
         query_text = request.form.get('query')
         if not query_text:
+            print('No query in form data')
             return jsonify({'error': 'No query in form data'}), 400
+
+        print(f'Received query: {query_text}')
 
         # Define the prompt for Gemini
         template_prompt = f"""
@@ -101,11 +104,14 @@ def query():
         """
 
         # Initialize the Gemini model
+        print('Initializing the Gemini model...')
         model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
         # Generate content from the prompt
+        print('Generating content from the prompt...')
         response = model.generate_content(template_prompt)
         response_text = response.text
+        print(f'Response text: {response_text}')
 
         # Extract Subject, Promo, and Description from the response
         def extract_value(start_str, end_str):
@@ -121,6 +127,7 @@ def query():
         rake = Rake()
         rake.extract_keywords_from_text(query_text)
         keywords = rake.get_ranked_phrases()
+        print(f'Extracted keywords: {keywords}')
 
         # Use the first keyword for the Unsplash API
         UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos'
@@ -134,6 +141,7 @@ def query():
                 'client_id': UNSPLASH_ACCESS_KEY
             })
             unsplash_data = unsplash_response.json()
+            print(f'Unsplash response: {unsplash_data}')
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
                 random_image = random.choice(unsplash_data['results'])
                 image_url = random_image['urls']['raw']
