@@ -6,7 +6,6 @@ from rake_nltk import Rake
 import random
 import requests
 
-# Initialize the Flask app
 app = Flask(__name__)
 
 # Apply CORS to the app
