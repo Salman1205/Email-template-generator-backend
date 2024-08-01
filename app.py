@@ -69,17 +69,27 @@ def login():
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import genai
+import requests
+import random
+from rake_nltk import Rake
+
+app = Flask(__name__)
+CORS(app)
+
 @app.route('/query', methods=['POST'])
 def query():
     try:
-        data = request.get_json()
-        if 'query' not in data:
-            return jsonify({'error': 'No query in JSON data'}), 400
-
-        query_text = data['query']
+        # Get form data from request
+        query_text = request.form.get('query')
+        if not query_text:
+            return jsonify({'error': 'No query in form data'}), 400
 
         # Define the prompt for Gemini
-        template_prompt = f"""You are a highly intelligent and professional email writer designed to understand user intent related to email text generation. The user provides you with the description of his email and you need to generate the subject, catchy promotion line and somewhat brief but persuasive description pitching the product the user has mentioned in his query.
+        template_prompt = f"""
+        You are a highly intelligent and professional email writer designed to understand user intent related to email text generation. The user provides you with the description of his email and you need to generate the subject, catchy promotion line and somewhat brief but persuasive description pitching the product the user has mentioned in his query.
 
         Make sure that description is (max 60 words), promo is (max 15 words), and subject (max 5 words).
         The user's query is: {query_text}
@@ -98,15 +108,14 @@ def query():
         response_text = response.text
 
         # Extract Subject, Promo, and Description from the response
-        subject_start = response_text.find('"subject"') + len('"subject"')
-        subject_end = response_text.find('"promo"')
-        promo_start = response_text.find('"promo"') + len('"promo"')
-        promo_end = response_text.find('"description"')
-        description_start = response_text.find('"description"') + len('"description"')
+        def extract_value(start_str, end_str):
+            start = response_text.find(start_str) + len(start_str)
+            end = response_text.find(end_str)
+            return response_text[start:end].strip().strip(':').strip().strip(',').strip()
 
-        subject = response_text[subject_start:subject_end].strip().strip(':').strip().strip(',').strip()
-        promo = response_text[promo_start:promo_end].strip().strip(':').strip().strip(',').strip()
-        description = response_text[description_start:].strip().strip(':').strip().strip(',').strip()
+        subject = extract_value('"subject"', '"promo"')
+        promo = extract_value('"promo"', '"description"')
+        description = extract_value('"description"', '')
 
         # Extract keywords from the query using RAKE
         rake = Rake()
@@ -116,6 +125,8 @@ def query():
         # Use the first keyword for the Unsplash API
         UNSPLASH_API_URL = 'https://api.unsplash.com/search/photos'
         UNSPLASH_ACCESS_KEY = "hnQZn2r_mww-jeUNtkRtIHk9m-Kf-YkghOKQCpWF6qk"
+
+        image_url = None
         if keywords:
             keyword = keywords[0]
             unsplash_response = requests.get(UNSPLASH_API_URL, params={
@@ -124,13 +135,8 @@ def query():
             })
             unsplash_data = unsplash_response.json()
             if 'results' in unsplash_data and len(unsplash_data['results']) > 0:
-                image_results = unsplash_data['results']
-                random_image = random.choice(image_results)
+                random_image = random.choice(unsplash_data['results'])
                 image_url = random_image['urls']['raw']
-            else:
-                image_url = None
-        else:
-            image_url = None
 
         # Return generated subject, promo, description, and image URL
         return jsonify({
@@ -141,8 +147,8 @@ def query():
         }), 200
 
     except Exception as e:
-        print(f"Error processing Gemini's response: {e}")
-        return jsonify({'error': 'Failed to process Gemini response.'}), 500
+        print(f"Error processing request: {e}")
+        return jsonify({'error': 'Failed to process request.'}), 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80)  # Ensure it listens on all IP addresses
+    app.run(host='0.0.0.0', port=80)
