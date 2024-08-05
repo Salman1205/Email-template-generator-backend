@@ -11,7 +11,7 @@ import requests
 app = Flask(__name__)
 
 # Configure CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
@@ -104,5 +104,6 @@ def add_template():
         # Handle exceptions such as database errors
         print(f"Error adding template: {e}")
         return jsonify({'error': 'Failed to add template'}), 500
+    
 if __name__ == "__main__":
     app.run()
