@@ -32,15 +32,14 @@ class users(db.Model):
     password = db.Column(db.String(150), nullable=False)
 
 class Template(db.Model):
-    __tablename__ = 'templates'  # Table name matches the database table name
+    __tablename__ = 'templates'  # Explicitly specify the table name
     
-    # Define columns
-    template_id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Corresponds to `template_id` in the table
-    userid = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key to `users.id`
-    template = db.Column(db.Text, nullable=False)  # Template content
-
+    template_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    userid = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    template = db.Column(db.Text, nullable=False)
+    
     # Define relationship to User
-    user = db.relationship('User', backref=db.backref('templates', lazy=True))
+    user = db.relationship('users', backref=db.backref('templates', lazy=True))
 
     def __repr__(self):
         return f'<Template {self.template_id}>'
