@@ -113,5 +113,19 @@ def add_template():
         print(f"Error adding template: {e}")
         return jsonify({'error': 'Failed to add template'}), 500
 
+@app.route('/templates/<int:user_id>', methods=['GET'])
+def get_templates(user_id):
+    try:
+        templates = Template.query.filter_by(userid=user_id).all()
+        templates_list = [{'template_id': t.template_id, 'template': t.template} for t in templates]
+
+        if not templates_list:
+            return jsonify({'message': 'No templates found for this user'}), 404
+        
+        return jsonify({'templates': templates_list}), 200
+    except Exception as e:
+        print(f"Error retrieving templates: {e}")
+        return jsonify({'error': 'Failed to retrieve templates'}), 500
+
 if __name__ == "__main__":
     app.run()
