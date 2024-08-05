@@ -116,6 +116,8 @@ def add_template():
 @app.route('/templates/<user_id>', methods=['GET'])
 def get_templates(user_id):
     try:
+        print(f"Received user_id: '{user_id}'")  # Log the received user_id
+
         # Convert user_id from string to integer
         try:
             user_id_int = int(user_id)
