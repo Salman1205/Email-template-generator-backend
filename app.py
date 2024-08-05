@@ -31,18 +31,18 @@ class users(db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
-class Template(db.Model):
-    __tablename__ = 'templates'  # Explicitly specify the table name
+# class Template(db.Model):
+#     __tablename__ = 'templates'  # Explicitly specify the table name
     
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key should reference 'users.id'
-    template = db.Column(db.Text, nullable=False)
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key should reference 'users.id'
+#     template = db.Column(db.Text, nullable=False)
     
-    # Define relationship to User
-    user = db.relationship('User', backref=db.backref('templates', lazy=True))
+#     # Define relationship to User
+#     user = db.relationship('User', backref=db.backref('templates', lazy=True))
 
-    def __repr__(self):
-        return f'<Template {self.id}>'
+#     def __repr__(self):
+#         return f'<Template {self.id}>'
 
 # Ensure the database tables are created
 with app.app_context():
