@@ -116,7 +116,14 @@ def add_template():
 @app.route('/templates/<user_id>', methods=['GET'])
 def get_templates(user_id):
     try:
-        templates = Template.query.filter_by(userid=user_id).all()
+        # Convert user_id from string to integer
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user_id format'}), 400
+
+        # Retrieve all templates for the given user_id
+        templates = Template.query.filter_by(userid=user_id_int).all()
         templates_list = [{'template_id': t.template_id, 'template': t.template} for t in templates]
 
         if not templates_list:
