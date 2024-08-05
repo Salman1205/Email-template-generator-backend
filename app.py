@@ -31,6 +31,19 @@ class users(db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
+class Template(db.Model):
+    __tablename__ = 'templates'  # Explicitly specify the table name
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key should reference 'users.id'
+    template = db.Column(db.Text, nullable=False)
+    
+    # Define relationship to User
+    user = db.relationship('User', backref=db.backref('templates', lazy=True))
+
+    def __repr__(self):
+        return f'<Template {self.id}>'
+
 # Ensure the database tables are created
 with app.app_context():
     db.create_all()
@@ -68,6 +81,24 @@ def login():
         return jsonify({'message': 'Login successful!'}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/template', methods=['POST'])
+def add_template():
+    user_id = request.form.get('user_id')
+    template_content = request.form.get('template')
+
+    if not user_id or not template_content:
+        return jsonify({'error': 'Missing user_id or template content'}), 400
+
+    try:
+        new_template = Template(user_id=user_id, template=template_content)
+        db.session.add(new_template)
+        db.session.commit()
+
+        return jsonify({'message': 'Template added successfully!'}), 201
+    except Exception as e:
+        print(f"Error adding template: {e}")
+        return jsonify({'error': 'Failed to add template'}), 500
 
 if __name__ == "__main__":
     app.run()
