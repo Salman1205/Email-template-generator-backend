@@ -93,6 +93,7 @@ def login():
 def add_template():
     user_id = request.form.get('user_id')
     template_content = request.form.get('template')
+    print(user_id, template_content)
 
     if not user_id or not template_content:
         return jsonify({'error': 'Missing user_id or template content'}), 400
