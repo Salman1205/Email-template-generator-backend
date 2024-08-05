@@ -31,9 +31,13 @@ class users(db.Model):
         return f'<User {self.username}>'
 
 class Template(db.Model):
+    __tablename__ = 'templates'  # Explicitly specify the table name
+    
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Foreign key should reference 'users.id'
     template = db.Column(db.Text, nullable=False)
+    
+    # Define relationship to User
     user = db.relationship('User', backref=db.backref('templates', lazy=True))
 
     def __repr__(self):
