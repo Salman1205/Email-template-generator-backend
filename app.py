@@ -99,7 +99,7 @@ def add_template():
         return jsonify({'error': 'Missing user_id or template content'}), 400
 
     try:
-        new_template = Template(user_id=user_id, template=template_content)
+        new_template = Template(userid=user_id, template=template_content)
         db.session.add(new_template)
         db.session.commit()
 
