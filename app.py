@@ -96,7 +96,11 @@ def add_template():
     print(user_id, template_content)
 
     if not user_id or not template_content:
-        return jsonify({'error': 'Missing user_id or template content'}), 400
+        return jsonify({
+            'error': 'Missing user_id or template content',
+            'user_id': user_id,
+            'template_content': template_content
+        }), 400
 
     try:
         new_template = Template(userid=user_id, template=template_content)
