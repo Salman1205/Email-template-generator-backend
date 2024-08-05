@@ -113,7 +113,7 @@ def add_template():
         print(f"Error adding template: {e}")
         return jsonify({'error': 'Failed to add template'}), 500
 
-@app.route('/templates/<int:user_id>', methods=['GET'])
+@app.route('/templates', methods=['GET'])
 def get_templates(user_id):
     try:
         templates = Template.query.filter_by(userid=user_id).all()
