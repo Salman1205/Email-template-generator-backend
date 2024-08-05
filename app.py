@@ -91,8 +91,9 @@ def login():
 
 @app.route('/template', methods=['POST'])
 def add_template():
-    user_id = request.form.get('user_id')
-    template_content = request.form.get('template')
+    data = request.get_json()
+    user_id = data.get('user_id')
+    template_content = data.get('template')
     print(user_id, template_content)
 
     if not user_id or not template_content:
