@@ -3,15 +3,11 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import os
-import google.generativeai as genai
-from rake_nltk import Rake
-import random
-import requests
 
 app = Flask(__name__)
 
 # Configure CORS
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}})  # You can restrict origins if needed
 
 # SQLAlchemy configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://ateeb_admin:ishaq321!@emailtemplatebyateeb.mysql.database.azure.com/ateeb_db'
@@ -25,18 +21,23 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 # Define User Model
-class users(db.Model):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Template(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     template = db.Column(db.Text, nullable=False)
     user = db.relationship('User', backref=db.backref('templates', lazy=True))
+
+    def __repr__(self):
+        return f'<Template {self.id}>'
 
 # Ensure the database tables are created
 with app.app_context():
@@ -48,7 +49,6 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
-    # data = request.get_json()
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -56,8 +56,9 @@ def register():
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    # Directly use the password without hashing
-    new_user = users(username=username, email=email, password=password)
+    # Hash the password before storing it
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    new_user = User(username=username, email=email, password=hashed_password)
 
     db.session.add(new_user)
     db.session.commit()
@@ -66,19 +67,16 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    # data = request.get_json()
     email = request.form.get('email')
     password = request.form.get('password')
-    print(email,password)
-    user = users.query.filter_by(email=email).first()
-    if user and user.password == password:
-        # Prepare the response with user details
+
+    user = User.query.filter_by(email=email).first()
+    if user and bcrypt.check_password_hash(user.password, password):
         response_data = {
             'message': 'Login successful!',
             'user_id': user.id,
             'username': user.username,
-            'email': user.email,
-            'password': user.password
+            'email': user.email
         }
         return jsonify(response_data), 200
     else:
@@ -86,7 +84,6 @@ def login():
 
 @app.route('/template', methods=['POST'])
 def add_template():
-    # Get the form data
     user_id = request.form.get('user_id')
     template_content = request.form.get('template')
 
@@ -94,16 +91,14 @@ def add_template():
         return jsonify({'error': 'Missing user_id or template content'}), 400
 
     try:
-        # Create a new Template entry
         new_template = Template(user_id=user_id, template=template_content)
         db.session.add(new_template)
         db.session.commit()
 
         return jsonify({'message': 'Template added successfully!'}), 201
     except Exception as e:
-        # Handle exceptions such as database errors
         print(f"Error adding template: {e}")
         return jsonify({'error': 'Failed to add template'}), 500
-    
+
 if __name__ == "__main__":
     app.run()
