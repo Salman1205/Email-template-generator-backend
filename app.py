@@ -21,7 +21,7 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 # Define User Model
-class User(db.Model):
+class users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -49,6 +49,7 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
+    # data = request.get_json()
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -56,9 +57,8 @@ def register():
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    # Hash the password before storing it
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username=username, email=email, password=hashed_password)
+    # Directly use the password without hashing
+    new_user = users(username=username, email=email, password=password)
 
     db.session.add(new_user)
     db.session.commit()
@@ -67,20 +67,24 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
+    # data = request.get_json()
     email = request.form.get('email')
     password = request.form.get('password')
-
-    user = User.query.filter_by(email=email).first()
-    if user and bcrypt.check_password_hash(user.password, password):
+    print(email,password)
+    user = user.query.filter_by(email=email).first()
+    if user and user.password == password:
+        # Prepare the response with user details
         response_data = {
             'message': 'Login successful!',
             'user_id': user.id,
             'username': user.username,
-            'email': user.email
+            'email': user.email,
+            'password': user.password
         }
         return jsonify(response_data), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
+
 
 @app.route('/template', methods=['POST'])
 def add_template():
