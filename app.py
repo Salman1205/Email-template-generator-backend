@@ -1,12 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
 import os
-import google.generativeai as genai
-from rake_nltk import Rake
-import random
-import requests
 
 app = Flask(__name__)
 
@@ -20,9 +15,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Secret Key for sessions and other purposes
 app.secret_key = os.environ.get('SECRET_KEY', '12345678')
 
-# Initialize SQLAlchemy and Bcrypt
+# Initialize SQLAlchemy
 db = SQLAlchemy(app)
-bcrypt = Bcrypt(app)
 
 # Define User Model
 class users(db.Model):
@@ -55,7 +49,6 @@ def index():
 
 @app.route('/register', methods=['POST'])
 def register():
-    # data = request.get_json()
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -63,7 +56,6 @@ def register():
     if not username or not email or not password:
         return jsonify({'error': 'Missing fields'}), 400
 
-    # Directly use the password without hashing
     new_user = users(username=username, email=email, password=password)
 
     db.session.add(new_user)
@@ -73,10 +65,9 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    # data = request.get_json()
     email = request.form.get('email')
     password = request.form.get('password')
-    print(email,password)
+    print(email, password)
     user = users.query.filter_by(email=email).first()
     if user and user.password == password:
         response_data = {
@@ -118,13 +109,11 @@ def get_templates(user_id):
     try:
         print(f"Received user_id: '{user_id}'")  # Log the received user_id
 
-        # Convert user_id from string to integer
         try:
             user_id_int = int(user_id)
         except ValueError:
             return jsonify({'error': 'Invalid user_id format'}), 400
 
-        # Retrieve all templates for the given user_id
         templates = Template.query.filter_by(userid=user_id_int).all()
         templates_list = [{'template_id': t.template_id, 'template': t.template} for t in templates]
 
